@@ -2,12 +2,12 @@
 
 This directory contains the frontend of the application built with ReactJS and ChakraUI.
 
-## Prerequisites
+## Local Deploy Procedures:
+### Prerequisites
+- Latest Node.js (v 20.x upwards) else run `curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash - && sudo apt-get install -y nodejs`
+- Latest npm (v .x upwards) else run `sudo npm install -g npm`
 
-- Node.js (version 14.x or higher)
-- npm (version 6.x or higher)
-
-## Setup Instructions
+### Instructions: 
 
 1. **Navigate to the frontend directory**:
     ```sh
