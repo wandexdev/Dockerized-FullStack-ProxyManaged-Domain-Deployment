@@ -1,0 +1,91 @@
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+  [entryPoints.websecure]
+    address = ":443"
+
+[api]
+  dashboard = true
+
+[log]
+  level = "DEBUG"
+
+[accessLog]
+
+[certificatesResolvers.myresolver.acme]
+  email = "${ACME_EMAIL}"
+  storage = "acme.json"
+  [certificatesResolvers.myresolver.acme.httpChallenge]
+    entryPoint = "web"
+
+[http]
+  [http.routers]
+    [http.routers.http-catchall]
+      entryPoints = ["web"]
+      middlewares = ["redirect-to-https"]
+      rule = "HostRegexp(`{host:.+}`)"
+      service = "noop"
+
+    [http.routers.frontend]
+      rule = "Host(`${DOMAIN}`)"
+      entryPoints = ["websecure"]
+      service = "frontend"
+      [http.routers.frontend.tls]
+        certResolver = "myresolver"
+
+    [http.routers.backend]
+      rule = "Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      entryPoints = ["websecure"]
+      service = "backend"
+      [http.routers.backend.tls]
+        certResolver = "myresolver"
+
+    [http.routers.docs]
+      rule = "Host(`${DOMAIN}`) && PathPrefix(`/docs`)"
+      entryPoints = ["websecure"]
+      service = "backend"
+      [http.routers.docs.tls]
+        certResolver = "myresolver"
+
+    [http.routers.redoc]
+      rule = "Host(`${DOMAIN}`) && PathPrefix(`/redoc`)"
+      entryPoints = ["websecure"]
+      service = "backend"
+      [http.routers.redoc.tls]
+        certResolver = "myresolver"
+
+    [http.routers.adminer]
+      rule = "Host(`db.${DOMAIN}`)"
+      entryPoints = ["websecure"]
+      service = "adminer"
+      [http.routers.adminer.tls]
+        certResolver = "myresolver"
+
+    [http.routers.proxy]
+      rule = "Host(`proxy.${DOMAIN}`)"
+      entryPoints = ["websecure"]
+      service = "api@internal"
+      [http.routers.proxy.tls]
+        certResolver = "myresolver"
+
+  [http.middlewares]
+    [http.middlewares.redirect-to-https.redirectScheme]
+      scheme = "https"
+
+  [http.services]
+    [http.services.frontend.loadBalancer]
+      [[http.services.frontend.loadBalancer.servers]]
+        url = "http://frontend:5173"
+
+    [http.services.backend.loadBalancer]
+      [[http.services.backend.loadBalancer.servers]]
+        url = "http://backend:8000"
+
+    [http.services.adminer.loadBalancer]
+      [[http.services.adminer.loadBalancer.servers]]
+        url = "http://adminer:8080"
+
+    [http.services.noop.loadBalancer]
+      [[http.services.noop.loadBalancer.servers]]
+        url = "http://0.0.0.0"
+
