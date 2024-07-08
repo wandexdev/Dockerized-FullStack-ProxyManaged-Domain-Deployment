@@ -1,5 +1,5 @@
 # Full-Stack FastAPI and React Template
-
+![banner](images/banner.png)
 Welcome to the Full-Stack FastAPI and React template repository. This repository serves as a demo application for interns, showcasing how to set up and run a full-stack application with a FastAPI backend and a ReactJS frontend using ChakraUI.
 
 ## Project Structure
