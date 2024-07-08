@@ -8,7 +8,7 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 5173
+EXPOSE 80
 
 # Start the Vite development server
 CMD ["npm", "run", "dev"]
