@@ -5,26 +5,15 @@ Welcome to the Full-Stack FastAPI and React template repository. This repository
 ## Usage
 For Production environment with a fullY DNS propaged domain name:
 Locate the [root directory's environment variable file](.env) and fill as required below
-```
+```env
 # Put your domain
 DOMAIN=example.com
 
 # Put your email
 ACME_EMAIL=example@gmail.com
-
 ```
 
 ## Project Structure
 The repository is organized into two main directories:
-- **frontend**: Contains the ReactJS application.
-- **backend**: Contains the FastAPI application and PostgreSQL database integration.
-
-Each directory has its own README file with detailed instructions specific to that part of the application.
-
-## Getting Started
-
-To get started with this template, please follow the instructions in the respective directories:
-
-- [Frontend README](./frontend/README.md)
-- [Backend README](./backend/README.md)
-
+- **frontend**: Contains the ReactJS application. Get details - [Frontend README](./frontend/README.md)
+- **backend**: Contains the FastAPI application and PostgreSQL database integration. get details - [Backend README](./backend/README.md)
