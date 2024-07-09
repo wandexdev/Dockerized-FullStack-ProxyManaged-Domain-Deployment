@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:20 AS build
 
 WORKDIR /app
 
@@ -8,7 +8,15 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 5173
+#### Multi stage Build ####
 
-# Start the Vite development server
-CMD ["npm", "run", "dev", "--", "--host"]
+RUN npm run build
+
+# Use nginx to serve the built app
+FROM nginx:alpine
+
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,15 +1,17 @@
-FROM python:3.11.9-alpine
-
-# environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/backend
+FROM python:3.10-slim
 
 # working directory
 WORKDIR /backend
 
 # system dependencies
-RUN apk add --no-cache curl
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
+        python3-dev \
+        postgresql-client \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
 RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python && \
@@ -21,7 +23,7 @@ RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/opt/poetry python
 COPY ./pyproject.toml ./poetry.lock* /backend/
 
 # Install project dependencies
-RUN poetry install --no-root
+RUN poetry install --no-root --no-interaction
 
 # Copy all backend files
 COPY . /backend/
@@ -29,6 +31,10 @@ RUN chmod +x /backend/prestart.sh
 
 EXPOSE 8000
 
-# Command to run the application
-CMD ["/bin/sh", "-c", "poetry run sh ./prestart.sh && poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+# environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/backend
 
+# Command to run the application
+CMD ["bash", "-c", "poetry run bash ./prestart.sh && poetry run uvicorn app.main:app --reload  --host 0.0.0.0 --port 8000"]
