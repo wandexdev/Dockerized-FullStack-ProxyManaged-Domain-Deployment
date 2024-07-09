@@ -2,10 +2,20 @@
 ![banner](images/2banner.png)
 Welcome to the Full-Stack FastAPI and React template repository. This repository serves as a demo application for interns, showcasing how to set up and run a full-stack application with a FastAPI backend and a ReactJS frontend using ChakraUI.
 
+## Usage
+For Production environment with a fullY DNS propaged domain name:
+Locate the [root directory's environment variable file](.env) and fill as required below
+```
+# Put your domain
+DOMAIN=example.com
+
+# Put your email
+ACME_EMAIL=example@gmail.com
+
+```
+
 ## Project Structure
-
 The repository is organized into two main directories:
-
 - **frontend**: Contains the ReactJS application.
 - **backend**: Contains the FastAPI application and PostgreSQL database integration.
 
