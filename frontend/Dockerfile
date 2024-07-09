@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:latest
 
 WORKDIR /app
 
@@ -8,8 +8,7 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 80
+EXPOSE 5173
 
 # Start the Vite development server
-CMD ["npm", "run", "dev"]
-
+CMD ["npm", "run", "dev", "--", "--host"]

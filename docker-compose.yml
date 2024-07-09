@@ -1,75 +1,89 @@
-version: '3.8'
+
 
 services:
-
-  traefik:
-    image: traefik:v2.10
-    command:
-      - "--api.insecure=true"   # Enable the Traefik dashboard (insecure for testing)
-      - "--providers.docker=true"  # Enable Docker provider
-      - "--entrypoints.web.address=:80"  # Define the web entry point
-      # - "--entrypoints.dashboard.address=:8090"  # Define the Traefik dashboard entry point
-    ports:
-      - "80:80"     # Expose port 80 for HTTP
-      - "8090:8080" # Expose port 8090 for Traefik dashboard under proxy.domain
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"  # Communicate with Docker
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    env_file:
+      - ./frontend/.env
+    environment:
+      - VITE_BASE_URL=${DOMAIN}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`proxy.44.202.114.186`) && PathPrefix(`/`)"  # Traefik dashboard accessible at proxy.domain:8090
-      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    ports:
+      - "5173:3000"
 
   backend:
     build:
-      context: ./backend  # Path to your FastAPI backend Dockerfile
+      context: ./backend
     container_name: backend
     env_file:
       - ./backend/.env
+    environment:
+      - DOMAIN=${DOMAIN}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      - postgres
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`44.202.114.186`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/docs`) || PathPrefix(`/redoc`))"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
-      - "traefik.http.routers.docs.rule=Host(`44.202.114.186`) && PathPrefix(`/docs`)"
-      - "traefik.http.routers.redoc.rule=Host(`44.202.114.186`) && PathPrefix(`/redoc`)"
-    depends_on:
-      - db
+    ports:
+      - "8000:8000"
 
-  db:
+  postgres:
     image: postgres:13
-    container_name: db
+    container_name: postgres
     env_file:
-      - ./backend/.env
+      - ./.env
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changethis123}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
-  frontend:
-    build:
-      context: ./frontend  # Path to your React frontend Dockerfile
-    container_name: frontend
-    env_file:
-      - ./frontend/.env 
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`44.202.114.186`)" # Serve frontend at the root path
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
-  
   adminer:
     image: adminer
     container_name: adminer
+    depends_on:
+      - postgres
+    env_file:
+      - ./.env
+    environment:
+      - ADMINER_DEFAULT_SERVER=${ADMINER_DEFAULT_SERVER}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.adminer.rule=Host(`adminer.44.202.114.186`)"  # Subdomain for Adminer
+      - "traefik.http.routers.adminer.rule=Host(`db.${DOMAIN}`)"
       - "traefik.http.services.adminer.loadbalancer.server.port=8080"
     ports:
+      - "8081:8080"
+
+  traefik:
+    image: traefik:v2.4
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=${EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
       - "8080:8080"
-    depends_on:
-      - db
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
 
 volumes:
   postgres_data:
+
